@@ -1,0 +1,14 @@
+name: action_channel
+description: Communication channel that bundles a sink and a stream, with additional logic. Allows the input/sink type to be different from the output/stream type, simplifying the entry point.
+version: 0.0.1
+repository: https://github.com/DrafaKiller/ActionChannel-dart
+issue_tracker: https://github.com/DrafaKiller/ActionChannel-dart/issues
+
+environment:
+  sdk: '>=2.17.6 <3.0.0'
+
+dependencies:
+  stream_channel: ^2.1.0
+
+dev_dependencies:
+  lints: ^2.0.0
