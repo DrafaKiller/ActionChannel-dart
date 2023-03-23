@@ -7,11 +7,6 @@ class ChannelCommunication<In, Out, Response> extends Channel<In, Out, Response>
   @override Sink<In> get sink => input;
   @override Stream<Out> get stream => output;
 
-  ChannelCommunication(
-    this.input,
-    this.output,
-    { 
-      super.action
-    }
-  ) : super(input.sink, output.stream);
+  ChannelCommunication(this.input, this.output, { super.action }) :
+    super.raw(input.sink, output.stream);
 }

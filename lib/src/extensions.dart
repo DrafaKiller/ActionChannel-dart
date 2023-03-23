@@ -2,24 +2,24 @@ import 'dart:async';
 
 import 'package:stream_channel/stream_channel.dart';
 
-import '../channel.dart';
-import '../components/raw.dart';
+import 'channel.dart';
+import 'components/raw.dart';
 
 /* -= Converting to Channel =- */
 
 extension StreamControllerToChannel<T> on StreamController<T> {
-  SingleChannel<T> toChannel() => SingleChannel(sink, stream);
+  SimpleChannel<T> toChannel() => SimpleChannel.raw(sink, stream);
 }
 
 extension StreamChannelToChannel<InOut> on StreamChannel<InOut> {
-  SingleChannel<InOut> toChannel() => SingleChannel(sink, stream);
+  SimpleChannel<InOut> toChannel() => SimpleChannel.raw(sink, stream);
 }
 
 extension RawChannelToChannel<In, Out> on RawChannel<In, Out> {
   Channel<In, Out, void> toChannel() =>
     this is Channel<In, Out, void>
     ? this as Channel<In, Out, void>
-    : Channel(sink, stream);
+    : Channel.raw(sink, stream);
 }
 
 /* -= Extending Functions/Callbacks =- */

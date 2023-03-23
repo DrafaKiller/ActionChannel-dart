@@ -1,6 +1,6 @@
 library action_channel;
 
 export 'src/channel.dart';
-export 'src/controller.dart';
+export 'src/observer.dart';
 
-export 'src/others/extensions.dart' show StreamControllerToChannel, StreamChannelToChannel, RawChannelToChannel;
+export 'src/extensions.dart' show StreamControllerToChannel, StreamChannelToChannel, RawChannelToChannel;

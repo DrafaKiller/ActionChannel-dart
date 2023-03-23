@@ -81,7 +81,7 @@ In addition, it offers callbacks and the ability to append and prepend them.
 final channel = Channel<int, User, void>.controller(
   (int id) => User(id),
   
-  onAdded: (int id) => print('User $id added'),
+  onAdd: (int id) => print('User $id added'),
   onData: (User user) => print('User with id "${ user.id }" received'),
   onListen: (subscription) => print('Channel listened'),
   onClose: () => print('Channel closed'),

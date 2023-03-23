@@ -1,15 +1,17 @@
 import 'dart:async';
 
-import 'controller.dart';
+import 'observer.dart';
 import 'components/raw.dart';
 import 'mixins/stream.dart';
-import 'others/extensions.dart';
+import 'extensions.dart';
 
 class Channel<In, Out, Response> extends RawChannel<In, Out> with StreamCast<Out, Channel<In, Out, Response>> {
   /// Adds functionality to the `.on(callback)` method, given the data returned by the consumer of the channel.
   /// 
   /// Used in the `.on(callback)` method, to "reply" to the sender of the data.
   final ChannelAction<In, Out, Response>? action;
+
+  /* -= Constructor =- */
 
   /// A channel groups a sink and a stream together, namely an input and an output.
   /// 
@@ -31,17 +33,20 @@ class Channel<In, Out, Response> extends RawChannel<In, Out> with StreamCast<Out
   /// This is to say, it does not ensure the interaction between the sink and the stream.
   /// Instantiating the channel, make sure to setup the stream controller to listen to the sink,
   /// or use a suitable constructor.
-  Channel(
-    super.sink, 
-    super.stream,
+  factory Channel(
+    ChannelTransformer<In, Out> transformer,
     {
-      this.action
+      ChannelAction<In, Out, Response>? action,
+      bool sync = false,
     }
-  );
+  ) {
+    final input = StreamController<In>(sync: sync);
+    final output = StreamController<Out>.broadcast(sync: sync);
 
-  /* -= Alternative constructors =- */
+    input.stream.listen((data) => output.add(transformer(data)));
 
-  static SingleChannel<T> simple<T>() => StreamController<T>().toChannel();
+    return Channel.raw(input.sink, output.stream, action: action);
+  }
 
   factory Channel.controller(
     ChannelTransformer<In, Out> transformer,
@@ -49,7 +54,36 @@ class Channel<In, Out, Response> extends RawChannel<In, Out> with StreamCast<Out
       ChannelAction<In, Out, Response>? action,
       bool sync = false,
 
-      ChannelAddedCallback<In>? onAdded,
+      ChannelAddCallback<In>? onAdd,
+      ChannelDataCallback<Out>? onData,
+      ChannelListenCallback<Out>? onListen,
+      ChannelCloseCallback? onClose,
+    }
+  ) => ChannelObserver<In, Out, Response>(
+    transformer, 
+    action: action,
+    sync: sync,
+
+    onAdd: onAdd,
+    onData: onData,
+    onListen: onListen,
+    onClose: onClose,
+  ).channel;
+
+  /* -= Alternative constructors =- */
+
+  Channel.raw(super.sink, super.stream, { this.action });
+
+  static SimpleChannel<T> simple<T>() => StreamController<T>().toChannel();
+
+  /*
+  factory Channel.controller(
+    ChannelTransformer<In, Out> transformer,
+    {
+      ChannelAction<In, Out, Response>? action,
+      bool sync = false,
+
+      ChannelAddedCallback<In>? onAdd,
       ChannelDataCallback<Out>? onData,
       ChannelListenCallback<Out>? onListen,
       ChannelCloseCallback? onClose,
@@ -60,12 +94,13 @@ class Channel<In, Out, Response> extends RawChannel<In, Out> with StreamCast<Out
       action: action,
       sync: sync,
 
-      onAdded: onAdded,
+      onAdd: onAdd,
       onData: onData,
       onListen: onListen,
       onClose: onClose,
     ).channel;
   }
+  */
   
   /* -= Methods =- */
 
@@ -107,15 +142,16 @@ class Channel<In, Out, Response> extends RawChannel<In, Out> with StreamCast<Out
   /// 
   /// This can be used to extend the branches of the channel, narrowing or widening the data.
   @override
-  Channel<In, Out, Response> using(Stream<Out> stream) =>
-    Channel<In, Out, Response>(sink, stream, action: action);
+  Channel<In, Out, Response> using(Stream<Out> stream) => Channel<In, Out, Response>.raw(sink, stream, action: action);
 }
 
 /* -= Channels =- */
 
-typedef SingleChannel<InOut> = Channel<InOut, InOut, InOut>;
+typedef SimpleChannel<InOut> = Channel<InOut, InOut, InOut>;
 
-/* -= Action Definition =- */
+/* -= Definition =- */
+
+typedef ChannelTransformer<In, Out> = Out Function(In data);
 
 typedef ChannelActionCallback<Out, Response> = FutureOr<Response?> Function(Out data);
 typedef ChannelAction<In, Out, Response> = void Function(Response data, Out output, Channel<In, Out, Response> channel);
